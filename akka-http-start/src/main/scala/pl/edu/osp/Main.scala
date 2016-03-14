@@ -8,12 +8,14 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import spray.json._
 
+
+
 object Main  extends  App with BaseService {
   val serviceName = "Pierwsza applikacja"
   protected def log: LoggingAdapter = Logging(system, serviceName)
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
-
+  val dbAct = system.actorOf(Props[DBActor], name = "DBActor")
   val route =
     get {
       pathSingleSlash {
