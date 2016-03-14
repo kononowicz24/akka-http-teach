@@ -6,6 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import spray.json._
 
 object Main  extends  App with BaseService {
   val serviceName = "Pierwsza applikacja"
@@ -25,8 +26,11 @@ object Main  extends  App with BaseService {
         path("ping") {
           complete("PONG!")
         } ~
-        path("crash") {
-          sys.error("BOOM!")
+        (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
+         complete(s"API for $l parm o =  $o" )
+      } ~
+        path("api" / RestPath) { (pe) =>
+         complete(s"API with end $pe ")
         }
     }
 
