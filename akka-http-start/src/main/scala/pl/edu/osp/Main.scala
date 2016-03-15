@@ -1,6 +1,6 @@
 package pl.edu.osp
 
-import akka.actor.ActorSystem
+import akka.actor.{Props, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
@@ -34,8 +34,18 @@ object Main  extends  App with BaseService {
         path("api" / RestPath) { (pe) =>
          complete(s"API with end $pe ")
         }
+       path("weather") {
+         complete {
+           <html>
+             <body>
+               <p>Ciśnienie: 454</p>
+               <p>Temperatura: 45</p>
+             </body>
+           </html>
+         }
+       }
     }
 
-  Http().bindAndHandle(route, "localhost", 8080)
+  Http().bindAndHandle(route, "localhost", httpPort)
 }
 
