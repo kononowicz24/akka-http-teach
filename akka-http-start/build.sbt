@@ -13,7 +13,8 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
-    "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.2"
+    "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.2",
+    "com.h2database" % "h2" % "1.4.191"
   )
 }
 
