@@ -11,6 +11,8 @@ import akka.pattern.ask
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import spray.json._
+import akka.http.scaladsl.model.StatusCodes.MovedPermanently
+
 
 case class LastWeather()
 
@@ -45,7 +47,7 @@ object Main  extends  App with BaseService {
       } ~
         path("api" / RestPath) { (pe) =>
          complete(s"API with end $pe ")
-        }
+        } ~
        path("weather") {
          implicit val timeout = Timeout(10 seconds)
          val f:Future[Array[String]] = ask(dbAct, LastWeather).mapTo[Array[String]]
@@ -54,15 +56,21 @@ object Main  extends  App with BaseService {
          complete {
            <html>
              <body>
-               <p><img src="/img/press.png" /> Ciśnienie: {arr(0)} hPa</p>
-               <p><img src="/img/temp.png" />Temperatura: {arr(1)} °C</p>
-               <p><img src="/img/humi.png" />Wilgotność: {arr(2)} %</p>
-               <p><img src="/img/sun.png" />Nasłonecznienie: {ShowInfo.getSun(arr(3).toInt)} </p>
-               <p><img src="/img/wind.png" />Wiatr: {ShowInfo.getWind(arr(4).toInt)} </p>
+               <p><img src="img/press.png" style="width:25px;height:25px;" /> Ciśnienie: {arr(0)} hPa</p>
+               <p><img src="img/temp.png" style="width:25px;height:25px;" />Temperatura: {arr(1)} °C</p>
+               <p><img src="img/humi.png" style="width:25px;height:25px;" />Wilgotność: {arr(2)} %</p>
+               <p><img src="img/sun.png" style="width:25px;height:25px;" />Nasłonecznienie: {ShowInfo.getSun(arr(3).toInt)} </p>
+               <p><img src="img/wind.png" style="width:25px;height:25px;" />Wiatr: {ShowInfo.getWind(arr(4).toInt)} </p>
              </body>
            </html>
          }
-       }
+       } ~
+      pathPrefix("img") {
+          getFromResourceDirectory("img")
+      } ~
+        path("redirect" / Rest) { pathRest =>
+          redirect("http://xxlo.osp.edu.pl/" + pathRest, MovedPermanently )
+        }
     }
 
   Http().bindAndHandle(route, "localhost", httpPort)

@@ -106,3 +106,7 @@ Create table Weather ( id:BIGINT, date:BIGINT, press:DOUBLE, temp:DOUBLE, humi:D
 	at org.h2.server.web.WebThread.process(WebThread.java:164)
 	at org.h2.server.web.WebThread.run(WebThread.java:89)
 	at java.lang.Thread.run(Thread.java:745)
+2016-03-17 22:29:12 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Błąd składniowy w wyrażeniu SQL "SELECT * FROM WEATHER ORDER BY DATE DESC LIMITS[*] 1 "
+Syntax error in SQL statement "SELECT * FROM WEATHER ORDER BY DATE DESC LIMITS[*] 1 "; SQL statement:
+Select * FROM weather Order By date Desc Limits 1 [42000-191]
