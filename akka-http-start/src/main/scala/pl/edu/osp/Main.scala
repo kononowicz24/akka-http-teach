@@ -3,6 +3,7 @@ package pl.edu.osp
 import akka.actor.{Props, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
@@ -23,7 +24,14 @@ object ShowInfo {
   def getWind(i:Int):String = if(i < 0 || i > 4) "Błąd" else wind(i)
 }
 
-object Main  extends  App with BaseService {
+final case class WeatherData(temp:Int, pass: Int, humi: Int, wind: Int, sun: Int)
+
+trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
+
+  implicit val itemFormat = jsonFormat5(WeatherData)
+}
+
+object Main  extends  App with BaseService with JsonSupport {
 
   val serviceName = "Pierwsza applikacja"
   protected def log: LoggingAdapter = Logging(system, serviceName)
@@ -33,11 +41,7 @@ object Main  extends  App with BaseService {
   val route =
     get {
       pathSingleSlash {
-        complete {
-          <html>
-            <body>Hello world!</body>
-          </html>
-        }
+        getFromResource("html/index.html")
       } ~
         path("ping") {
           complete("PONG!")
@@ -45,8 +49,10 @@ object Main  extends  App with BaseService {
         (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
          complete(s"API for $l parm o =  $o" )
       } ~
-        path("api" / RestPath) { (pe) =>
-         complete(s"API with end $pe ")
+        path("api" / "json") {
+         complete {
+           WeatherData(25, 1000, 89, 2, 3)
+         }
         } ~
        path("weather") {
          implicit val timeout = Timeout(10 seconds)

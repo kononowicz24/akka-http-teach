@@ -1,2 +1,0 @@
-Create table Weather ( id BIGINT, date BIGINT, press DOUBLE, temp DOUBLE, humi DOUBLE, sun  INT, wind  INT);
-
