@@ -43,9 +43,12 @@ object Main  extends  App with BaseService with JsonSupport {
       pathSingleSlash {
         getFromResource("html/index.html")
       } ~
-        path("ping") {
-          complete("PONG!")
+        pathPrefix("html") {
+         getFromResourceDirectory("html")
         } ~
+      pathPrefix("angular") {
+        getFromResourceDirectory("angular")
+      } ~
         (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
          complete(s"API for $l parm o =  $o" )
       } ~
@@ -88,8 +91,18 @@ object Main  extends  App with BaseService with JsonSupport {
   post {
     (path("form") & formFields(
       'temp.as[Int], 'press.as[Int], 'humi.as[Int], 'wind.as[Int], 'sun.as[Int]) ) {
-        (temp, press, humi, wind, sun)=>
-      complete(s"OK: $temp $press $humi $wind $sun")
+        (temp, press, humi, wind, sun) => {
+          val arr: Array[Int] = new Array(5)
+          arr(0) = temp
+          arr(1) = press
+          arr(2) = humi
+          arr(3) = wind
+          arr(4) = sun
+          implicit val timeout = Timeout(10 seconds)
+          val f: Future[Int] = ask(dbAct, arr).mapTo[Int]
+          Await.result(f, 10 seconds)
+          redirect("/", MovedPermanently)
+        }
     }
   }
 

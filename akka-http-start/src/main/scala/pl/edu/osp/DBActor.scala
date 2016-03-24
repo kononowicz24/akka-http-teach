@@ -1,6 +1,7 @@
 package pl.edu.osp
 
 import java.sql.DriverManager
+import java.util.Date
 
 import akka.actor.Actor
 
@@ -10,6 +11,7 @@ class DBActor extends Actor {
 
   def receive = {
     case LastWeather => sender ! getLatest
+    case x:Array[Int] => sender ! insertRow(x)
   }
 
   override def postStop() {
@@ -29,5 +31,17 @@ class DBActor extends Actor {
       rArr(3) = res.getInt(4)
       rArr(4) = res.getInt(5)
     rArr
+  }
+
+  private def insertRow(arr:Array[Int]): Int = {
+    val stat = conn.prepareStatement(
+    "Insert into WEATHER (date, temp, press, humi, wind, sun) values (?, ?, ?, ?, ?, ?)")
+    stat.setLong(1,(new Date().getTime))
+    stat.setInt(2, arr(0))
+    stat.setInt(3, arr(1))
+    stat.setInt(4, arr(2))
+    stat.setInt(5, arr(3))
+    stat.setInt(6, arr(4))
+    stat.executeUpdate()
   }
 }
