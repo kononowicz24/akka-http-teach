@@ -85,9 +85,11 @@ object Main  extends  App with BaseService with JsonSupport {
         getFromResource("html/form.html")
       }
     } ~
-  put {
-    path("form") {
-      complete("OK")
+  post {
+    (path("form") & formFields(
+      'temp.as[Int], 'press.as[Int], 'humi.as[Int], 'wind.as[Int], 'sun.as[Int]) ) {
+        (temp, press, humi, wind, sun)=>
+      complete(s"OK: $temp $press $humi $wind $sun")
     }
   }
 
