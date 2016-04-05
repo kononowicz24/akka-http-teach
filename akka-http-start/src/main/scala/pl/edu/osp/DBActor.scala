@@ -20,7 +20,6 @@ class DBActor extends Actor {
     val stat = conn.prepareStatement("Select * FROM weather Order By date Desc Limit 1")
     val res = stat.executeQuery()
     val rArr = new Array[String](5)
-    var i = 0
     res.next()
       rArr(0) = res.getDouble(2).toString
       rArr(1) = res.getDouble(3).toString

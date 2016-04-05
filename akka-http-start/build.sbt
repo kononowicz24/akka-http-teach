@@ -1,8 +1,10 @@
+
 name          := "akkahttp-start"
 organization  := "pl.edu.osp"
-version       := "0.0.1"
+version       := "0.0.2"
 scalaVersion  := "2.11.7"
 scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
+
 
 libraryDependencies ++= {
   val akkaVersion      = "2.4.2"
@@ -13,10 +15,10 @@ libraryDependencies ++= {
     "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-spray-json-experimental" % akkaVersion,
     "com.typesafe.akka" %% "akka-http-xml-experimental" % akkaVersion,
+    "com.typesafe.play" %% "twirl-api" % "1.1.1",
     "org.scala-lang.modules" % "scala-xml_2.11" % "1.0.2",
     "com.h2database" % "h2" % "1.4.191"
   )
 }
 
-lazy val root = project.in(file(".")).configs(IntegrationTest)
-enablePlugins(JavaAppPackaging)
+lazy val root = project.in(file(".")).enablePlugins(JavaAppPackaging, SbtTwirl)

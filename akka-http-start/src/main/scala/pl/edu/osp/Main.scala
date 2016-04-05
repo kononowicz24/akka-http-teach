@@ -3,16 +3,18 @@ package pl.edu.osp
 import akka.actor.{Props, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
+//import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import akka.pattern.ask
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import spray.json._
+//import spray.json._
+//import akka.http.scaladsl.server._
+//import akka.http.scaladsl.server.directives.LoggingMagnet._
 import akka.http.scaladsl.model.StatusCodes.MovedPermanently
-
+import scala.language.postfixOps
 
 case class LastWeather()
 
@@ -33,17 +35,13 @@ object Main  extends  App with BaseService {
   val route =
     get {
       pathSingleSlash {
-        complete {
-          <html>
-            <body>Hello world!</body>
-          </html>
-        }
+        getFromResourceDirectory("angular")
       } ~
         path("ping") {
           complete("PONG!")
         } ~
-        (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
-         complete(s"API for $l parm o =  $o" )
+        (path("api" / IntNumber ) & parameter('o) & parameter('k)) { (l, o, k) =>
+         complete(s"API for $l parm o =  $o  and param k = $k")
       } ~
         path("api" / RestPath) { (pe) =>
          complete(s"API with end $pe ")
@@ -68,9 +66,21 @@ object Main  extends  App with BaseService {
       pathPrefix("img") {
           getFromResourceDirectory("img")
       } ~
+        pathPrefix("bootstrap") {
+          getFromResourceDirectory("bootstrap")
+        } ~
         path("redirect" / Rest) { pathRest =>
           redirect("http://xxlo.osp.edu.pl/" + pathRest, MovedPermanently )
+        } ~
+      pathPrefix("angular") {
+        getFromResourceDirectory("angular")
+      } ~
+      path("twirl") {
+        import TwirlMarshalling.twirlHtmlMarshaller
+        complete {
+          pl.edu.osp.html.index(20, 100, 60, "silny", "małe")
         }
+      }
     }
 
   Http().bindAndHandle(route, "localhost", httpPort)
