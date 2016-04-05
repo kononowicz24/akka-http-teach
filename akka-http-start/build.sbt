@@ -1,3 +1,7 @@
+import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
+import play.twirl.sbt.SbtTwirl
+
+net.virtualvoid.sbt.graph.Plugin.graphSettings
 
 name          := "akkahttp-start"
 organization  := "pl.edu.osp"
@@ -21,4 +25,4 @@ libraryDependencies ++= {
   )
 }
 
-lazy val root = project.in(file(".")).enablePlugins(JavaAppPackaging, SbtTwirl)
+lazy val `akkahttp-start` = (project in file(".")).enablePlugins(SbtTwirl, JavaAppPackaging)

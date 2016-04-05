@@ -10,14 +10,17 @@
     })
     .Class({
       constructor: function() {
-        this.temperature = 18;
+        this.temperature = '23';
         this.pressure = 1002;
         this.humidility = 80;
         this.wind = 5;
         this.sun = 4;
       },
+
       fun : function() {
         
       }
+
     });
 })(window.app || (window.app = {}));
+
