@@ -43,13 +43,7 @@ object Main  extends  App with BaseService with JsonSupport {
   val route =
     get {
       pathSingleSlash {
-        getFromResourceDirectory("angular")
-      } ~
-        pathPrefix("html") {
-         getFromResourceDirectory("html")
-        } ~
-      pathPrefix("angular") {
-        getFromResourceDirectory("angular")
+        getFromResource("angular")
       } ~
         (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
          complete(s"API for $l parm o =  $o" )
@@ -89,16 +83,22 @@ object Main  extends  App with BaseService with JsonSupport {
         path("redirect" / Rest) { pathRest =>
           redirect("http://xxlo.osp.edu.pl/" + pathRest, MovedPermanently )
         } ~
+        pathPrefix("html") {
+          getFromResourceDirectory("html")
+        } ~
+        pathPrefix("angular") {
+          getFromResourceDirectory("angular")
+        } ~
+      path("form") {
+        getFromResource("html/form.html")
+      } ~
       path("twirl") {
         complete {
           import pl.edu.osp.TwirlMarshalling.twirlHtmlMarshaller
           html.index.render(20, 100, 60, "silny", "małe")
         }
-      } ~
-      path("form") {
-        getFromResource("html/form.html")
       }
-    } ~
+   } ~
   post {
     (path("form") & formFields(
       'temp.as[Int], 'press.as[Int], 'humi.as[Int], 'wind.as[Int], 'sun.as[Int]) ) {
@@ -116,6 +116,7 @@ object Main  extends  App with BaseService with JsonSupport {
         }
       }
     }
+
 
   Http().bindAndHandle(route, "localhost", httpPort)
 }
