@@ -1,13 +1,17 @@
 package pl.edu.osp
 
+import java.io.File
+
 import akka.actor.{Props, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
+import akka.http.javadsl.model.Multipart
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
+import akka.stream.scaladsl.Sink
+import akka.util.{ByteString, Timeout}
 import akka.pattern.ask
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -43,7 +47,7 @@ object Main  extends  App with BaseService with JsonSupport {
   val route =
     get {
       pathSingleSlash {
-        getFromResource("angular")
+        getFromResource("angular/index.html")
       } ~
         (path("api" / IntNumber ) & parameter('o)) { (l, o) =>
          complete(s"API for $l parm o =  $o" )
@@ -114,8 +118,23 @@ object Main  extends  App with BaseService with JsonSupport {
           Await.result(f, 10 seconds)
           redirect("/", MovedPermanently)
         }
-      }
+      } ~
+      path("upload") {
+          extractRequest { request =>
+            println(request)
+            /*val file = File.createTempFile("debug",".png")
+            val futureDone: Future[Long] = request.entity.dataBytes.runWith(Sink.file(file))
+
+            onComplete(futureDone) { result =>
+              complete(s"path:${file.getAbsolutePath}, size:${result.get}")
+            } */
+            complete {
+              <html><body><h1>{request}</h1></body></html>
+            }
+          }
+        }
     }
+
 
 
   Http().bindAndHandle(route, "localhost", httpPort)
