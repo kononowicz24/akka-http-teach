@@ -90,10 +90,11 @@ object Main  extends  App with BaseService with JsonSupport {
           redirect("http://xxlo.osp.edu.pl/" + pathRest, MovedPermanently )
         } ~
       path("twirl") {
-        import pl.edu.osp.TwirlMarshalling.twirlHtmlMarshaller
         complete {
-         html.twirl.index.render(20, 100, 60, "silny", "małe")
+          import pl.edu.osp.TwirlMarshalling.twirlHtmlMarshaller
+          html.index.render(20, 100, 60, "silny", "małe")
         }
+      } ~
       path("form") {
         getFromResource("html/form.html")
       }
@@ -115,7 +116,6 @@ object Main  extends  App with BaseService with JsonSupport {
         }
       }
     }
-  }
 
   Http().bindAndHandle(route, "localhost", httpPort)
 }

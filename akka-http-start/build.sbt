@@ -1,14 +1,13 @@
 import com.typesafe.sbt.packager.archetypes.JavaAppPackaging
 import play.twirl.sbt.SbtTwirl
 
-net.virtualvoid.sbt.graph.Plugin.graphSettings
-
-name          := "akkahttp-start"
+name          := "akka-http-start"
 organization  := "pl.edu.osp"
 version       := "0.0.2"
 scalaVersion  := "2.11.7"
 scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
 
+lazy val `akka-http-start` = (project in file(".")).enablePlugins(SbtTwirl, JavaAppPackaging)
 
 libraryDependencies ++= {
   val akkaVersion      = "2.4.2"
@@ -25,4 +24,4 @@ libraryDependencies ++= {
   )
 }
 
-lazy val `akkahttp-start` = (project in file(".")).enablePlugins(SbtTwirl, JavaAppPackaging)
+
