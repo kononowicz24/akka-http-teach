@@ -1,6 +1,6 @@
 package pl.edu.osp
 
-import java.io.File
+import java.io.{FileOutputStream, ByteArrayOutputStream, File}
 
 import akka.actor.{Props, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
@@ -20,6 +20,7 @@ import akka.http.scaladsl.server._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes.MovedPermanently
 import scala.language.postfixOps
+import scala.xml.Unparsed
 
 case class LastWeather()
 
@@ -99,7 +100,8 @@ object Main  extends  App with BaseService with JsonSupport {
       path("twirl") {
         complete {
           import pl.edu.osp.TwirlMarshalling.twirlHtmlMarshaller
-          html.index.render(20, 100, 60, "silny", "małe")
+          val body = html.index.render(20, 100, 60, "silny", "małe").body
+          html.insider.render(body)
         }
       }
    } ~
@@ -119,20 +121,15 @@ object Main  extends  App with BaseService with JsonSupport {
           redirect("/", MovedPermanently)
         }
       } ~
-      path("upload") {
-          extractRequest { request =>
-            println(request)
-            /*val file = File.createTempFile("debug",".png")
-            val futureDone: Future[Long] = request.entity.dataBytes.runWith(Sink.file(file))
-
-            onComplete(futureDone) { result =>
-              complete(s"path:${file.getAbsolutePath}, size:${result.get}")
-            } */
-            complete {
-              <html><body><h1>{request}</h1></body></html>
-            }
-          }
+      (path("upload") & formFields( 'file.as[Array[Byte]])) {
+        (byteArr) =>  {
+          println(byteArr)
+          val newFile = new FileOutputStream("./test.png")
+          newFile.write(byteArr)
+          newFile.close()
+          complete(s"size:${byteArr.length}")
         }
+      }
     }
 
 
