@@ -121,16 +121,33 @@ object Main  extends  App with BaseService with JsonSupport {
           redirect("/", MovedPermanently)
         }
       } ~
-      (path("upload") & formFields( 'file.as[Array[Byte]])) {
-        (byteArr) =>  {
-          println(byteArr)
-          val newFile = new FileOutputStream("./test.png")
-          newFile.write(byteArr)
-          newFile.close()
-          complete(s"size:${byteArr.length}")
+      (path( "upload" ) & entity(as[Multipart.FormData])) { fileData => {
+          complete {
+            val fileName = "test.png"
+            val temp = System.getProperty("java.io.tmpdir")
+            val filePath = temp + "/" + fileName
+            processFile(filePath,fileData).map { fileSize =>
+              HttpResponse(StatusCodes.OK, entity = s"File successfully uploaded. Fil size is $fileSize")
+            }.recover {
+              case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
+            }
+          }
         }
       }
     }
+
+  private def processFile(filePath: String, fileData: Multipart.FormData) = {
+    val fileOutput = new FileOutputStream(filePath)
+    fileData.getParts.mapAsync(1) {
+      bodyPart =>
+        def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
+          val byteArray: Array[Byte] = byteString.toArray
+          fileOutput.write(byteArray)
+          array ++ byteArray
+        }
+        bodyPart.entity.dataBytes.runFold(Array[Byte]())(writeFileOnLocal)
+    }.runFold(0)(_ + _.length)
+  }
 
 
 
