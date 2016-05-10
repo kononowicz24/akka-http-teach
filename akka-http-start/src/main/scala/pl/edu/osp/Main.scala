@@ -9,6 +9,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
 import akka.http.scaladsl.server.Directives._
+
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.util.{ByteString, Timeout}
@@ -107,49 +108,57 @@ object Main  extends  App with BaseService with JsonSupport {
    } ~
   post {
     (path("form") & formFields(
-      'temp.as[Int], 'press.as[Int], 'humi.as[Int], 'wind.as[Int], 'sun.as[Int]) ) {
-        (temp, press, humi, wind, sun) => {
-          val arr: Array[Int] = new Array(5)
-          arr(0) = temp
-          arr(1) = press
-          arr(2) = humi
-          arr(3) = wind
-          arr(4) = sun
-          implicit val timeout = Timeout(10 seconds)
-          val f: Future[Int] = ask(dbAct, arr).mapTo[Int]
-          Await.result(f, 10 seconds)
-          redirect("/", MovedPermanently)
-        }
-      }  ~
-      (path( "upload" ) & entity(as[Multipart.FormData])) { fileData => {
-          complete {
-            val fileName = "test.png"
-            val temp = System.getProperty("java.io.tmpdir")
-            val filePath = temp + "/" + fileName
+      'temp.as[Int], 'press.as[Int], 'humi.as[Int], 'wind.as[Int], 'sun.as[Int])) {
+      (temp, press, humi, wind, sun) => {
+        val arr: Array[Int] = new Array(5)
+        arr(0) = temp
+        arr(1) = press
+        arr(2) = humi
+        arr(3) = wind
+        arr(4) = sun
+        implicit val timeout = Timeout(10 seconds)
+        val f: Future[Int] = ask(dbAct, arr).mapTo[Int]
+        Await.result(f, 10 seconds)
+        redirect("/", MovedPermanently)
+      }
+    } ~
+      (path("upload") & entity(as[Multipart.FormData])) { fileData => {
 
-            val fileOutput = new FileOutputStream(filePath)
-            def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
-              val byteArray: Array[Byte] = byteString.toArray
-              fileOutput.write(byteArray)
-              println(s"============= ByterArray size = ${byteArray.length}")
-              array ++ byteArray
-            }
-            println("============== next maps file data")
-            fileData.parts.mapAsync(1) { bp =>
-              println("============== work with part of file data")
-              bp.entity.dataBytes.runFold(Array[Byte]())(writeFileOnLocal)
-            }
-           /* processFile(filePath,fileData).map { fileSize =>
-              HttpResponse(StatusCodes.OK, entity = s"File successfully uploaded. Fil size is $fileSize")
-            }.recover {
-              case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
-            }
-            */ HttpResponse(StatusCodes.OK, entity = s"loaded on $filePath")
+        val fileName = "test.png"
+        val temp = System.getProperty("java.io.tmpdir")
+        val filePath = temp + "/" + fileName
+
+
+        val fileOutput = new FileOutputStream(filePath)
+        def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
+          val byteArray: Array[Byte] = byteString.toArray
+          fileOutput.write(byteArray)
+          fileOutput.flush()
+          fileOutput.close()
+          println(s"============= ByterArray size = ${byteArray.length}")
+          array ++ byteArray
+        }
+        println("============== next maps file data")
+        var info = "Data: \n"
+        fileData.parts.mapAsync(1) { bp =>
+
+          import scala.concurrent.ExecutionContext.Implicits.global
+          println("============== work with part of file data")
+          bp.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map { c =>
+            info += s"Received file: ${bp.filename} with contents:\n$c"
           }
         }
+        /* processFile(filePath,fileData).map { fileSize =>
+           HttpResponse(StatusCodes.OK, entity = s"File successfully uploaded. Fil size is $fileSize")
+         }.recover {
+           case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
+         } */
+
+        complete(HttpResponse(StatusCodes.OK, entity = info))
+
       }
-    }
-  /*
+      }
+    /*
   private def processFile(filePath: String, fileData: Multipart.FormData) = {
     val fileOutput = new FileOutputStream(filePath)
     fileData.getParts.mapAsync(1) {
@@ -163,7 +172,7 @@ object Main  extends  App with BaseService with JsonSupport {
     }.runFold(0)(_ + _.length)
   }
   */
-
+  }
 
 
   Http().bindAndHandle(route, "localhost", httpPort)
