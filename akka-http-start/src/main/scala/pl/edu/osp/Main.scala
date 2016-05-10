@@ -123,7 +123,6 @@ object Main  extends  App with BaseService with JsonSupport {
       }
     } ~
       (path("upload") & entity(as[Multipart.FormData])) { fileData => {
-
         val fileName = "test.png"
         val temp = System.getProperty("java.io.tmpdir")
         val filePath = temp + "/" + fileName
@@ -140,28 +139,22 @@ object Main  extends  App with BaseService with JsonSupport {
         }
         println("============== next maps file data")
         var info = "Data: \n"
-        fileData.parts.mapAsync(1) { bp =>
+        import scala.concurrent.ExecutionContext.Implicits.global
+        //Thread.sleep(1000)
+        complete {
+          processFile(filePath, fileData).map { fileSize =>
 
-          import scala.concurrent.ExecutionContext.Implicits.global
-          println("============== work with part of file data")
-          bp.entity.dataBytes.runFold(ByteString.empty)(_ ++ _).map { c =>
-            info += s"Received file: ${bp.filename} with contents:\n$c"
+            HttpResponse(StatusCodes.OK, entity = s"File  successfully uploaded. Fil size is $fileSize")
+          }.recover {
+            case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
           }
         }
-        /* processFile(filePath,fileData).map { fileSize =>
-           HttpResponse(StatusCodes.OK, entity = s"File successfully uploaded. Fil size is $fileSize")
-         }.recover {
-           case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
-         } */
-
-        complete(HttpResponse(StatusCodes.OK, entity = info))
-
       }
       }
-    /*
+  }
   private def processFile(filePath: String, fileData: Multipart.FormData) = {
     val fileOutput = new FileOutputStream(filePath)
-    fileData.getParts.mapAsync(1) {
+    fileData.parts.mapAsync(1) {
       bodyPart =>
         def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
           val byteArray: Array[Byte] = byteString.toArray
@@ -171,8 +164,7 @@ object Main  extends  App with BaseService with JsonSupport {
         bodyPart.entity.dataBytes.runFold(Array[Byte]())(writeFileOnLocal)
     }.runFold(0)(_ + _.length)
   }
-  */
-  }
+
 
 
   Http().bindAndHandle(route, "localhost", httpPort)
