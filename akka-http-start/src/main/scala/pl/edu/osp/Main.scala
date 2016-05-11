@@ -123,28 +123,13 @@ object Main  extends  App with BaseService with JsonSupport {
       }
     } ~
       (path("upload") & entity(as[Multipart.FormData])) { fileData => {
-        val fileName = "test.png"
-        val temp = System.getProperty("java.io.tmpdir")
-        val filePath = temp + "/" + fileName
-
-
-        val fileOutput = new FileOutputStream(filePath)
-        def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
-          val byteArray: Array[Byte] = byteString.toArray
-          fileOutput.write(byteArray)
-          fileOutput.flush()
-          fileOutput.close()
-          println(s"============= ByterArray size = ${byteArray.length}")
-          array ++ byteArray
-        }
-        println("============== next maps file data")
-        var info = "Data: \n"
+        val temp = System.getProperty("java.io.homedir")
         import scala.concurrent.ExecutionContext.Implicits.global
         //Thread.sleep(1000)
         complete {
-          processFile(filePath, fileData).map { fileSize =>
+          processFile(fileData).map { fileSize =>
 
-            HttpResponse(StatusCodes.OK, entity = s"File  successfully uploaded. Fil size is $fileSize")
+            HttpResponse(StatusCodes.OK, entity = s"File  successfully uploaded. File size is $fileSize")
           }.recover {
             case ex: Exception => HttpResponse(StatusCodes.InternalServerError, entity = "Error in file uploading")
           }
@@ -152,17 +137,22 @@ object Main  extends  App with BaseService with JsonSupport {
       }
       }
   }
-  private def processFile(filePath: String, fileData: Multipart.FormData) = {
-    val fileOutput = new FileOutputStream(filePath)
-    fileData.parts.mapAsync(1) {
+  private def processFile(fileData: Multipart.FormData) = {
+    var optionFile:Option[FileOutputStream] = None
+    val length = fileData.parts.mapAsync(1) {
       bodyPart =>
+        val fileUploadName = bodyPart.filename.getOrElse("noname.png")
+        val filePath =  System.getProperty("java.io.homedir") + "/files/" + fileUploadName
+        optionFile = Some( new FileOutputStream(filePath))
         def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
           val byteArray: Array[Byte] = byteString.toArray
-          fileOutput.write(byteArray)
+          optionFile.foreach(_.write(byteArray))
           array ++ byteArray
         }
         bodyPart.entity.dataBytes.runFold(Array[Byte]())(writeFileOnLocal)
     }.runFold(0)(_ + _.length)
+    optionFile.foreach(_.close)
+    length
   }
 
 
