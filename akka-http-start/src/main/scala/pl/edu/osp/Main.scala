@@ -142,7 +142,8 @@ object Main  extends  App with BaseService with JsonSupport {
     val length = fileData.parts.mapAsync(1) {
       bodyPart =>
         val fileUploadName = bodyPart.filename.getOrElse("noname.png")
-        val filePath =  System.getProperty("java.io.homedir") + "/files/" + fileUploadName
+        val filePath =  System.getProperty("user.home") + "/files/" + fileUploadName
+        println("===================== path: " + filePath)
         optionFile = Some( new FileOutputStream(filePath))
         def writeFileOnLocal(array: Array[Byte], byteString: ByteString): Array[Byte] = {
           val byteArray: Array[Byte] = byteString.toArray
